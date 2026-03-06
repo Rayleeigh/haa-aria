@@ -1,0 +1,12 @@
+services:
+  portainer:
+    image: {{ portainer_image }}:{{ portainer_version }}
+    ports:
+      - "{{ portainer_port }}:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+
+volumes:
+  portainer_data:

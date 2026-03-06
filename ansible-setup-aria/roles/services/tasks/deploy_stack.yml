@@ -1,0 +1,36 @@
+- name: "{{ stack_name }} - Ensure directory exists"
+  file:
+    path: "{{ services_base_dir }}/{{ stack_name }}"
+    state: directory
+    mode: "0755"
+
+- name: "{{ stack_name }} - Deploy docker-compose file"
+  template:
+    src: "{{ stack_name }}/docker-compose.yml.j2"
+    dest: "{{ services_base_dir }}/{{ stack_name }}/docker-compose.yml"
+  register: compose_file
+
+- name: "{{ stack_name }} - Start services"
+  community.docker.docker_compose_v2:
+    project_src: "{{ services_base_dir }}/{{ stack_name }}"
+    state: present
+
+- name: "{{ stack_name }} - Restart if changed"
+  community.docker.docker_compose_v2:
+    project_src: "{{ services_base_dir }}/{{ stack_name }}"
+    state: present
+    recreate: always
+  when: compose_file.changed
+
+- name: "{{ stack_name }} - Health check"
+  ansible.builtin.command: docker compose -f {{ services_base_dir }}/{{ stack_name }}/docker-compose.yml ps --format json
+  register: stack_health
+  changed_when: false
+  failed_when: false
+
+- name: "{{ stack_name }} - Recover if unhealthy"
+  community.docker.docker_compose_v2:
+    project_src: "{{ services_base_dir }}/{{ stack_name }}"
+    state: present
+    recreate: always
+  when: stack_health.rc != 0

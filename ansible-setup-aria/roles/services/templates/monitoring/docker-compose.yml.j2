@@ -1,0 +1,23 @@
+services:
+  prometheus:
+    image: {{ prometheus_image }}:{{ prometheus_version }}
+    ports:
+      - "{{ prometheus_port }}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: {{ grafana_image }}:{{ grafana_version }}
+    ports:
+      - "{{ grafana_port }}:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  node-exporter:
+    image: {{ node_exporter_image }}:{{ node_exporter_version }}
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:

@@ -1,0 +1,17 @@
+# Base path
+services_base_dir: /opt/services
+
+# Portainer
+portainer_image: portainer/portainer-ce
+portainer_version: latest
+portainer_port: 9443
+
+# Monitoring
+prometheus_image: prom/prometheus
+prometheus_version: latest
+prometheus_port: 9090
+grafana_image: grafana/grafana
+grafana_version: latest
+grafana_port: 3000
+node_exporter_image: prom/node-exporter
+node_exporter_version: latest

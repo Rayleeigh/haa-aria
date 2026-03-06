@@ -1,0 +1,7 @@
+- name: Deploy service stacks
+  include_tasks: deploy_stack.yml
+  loop:
+    - portainer
+    - monitoring
+  loop_control:
+    loop_var: stack_name

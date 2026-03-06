@@ -1,0 +1,34 @@
+# Docker edition and version
+docker_edition: ce
+docker_version: latest
+
+# User to add to docker group
+docker_user: deploy
+
+# Docker Compose
+docker_compose_version: v2.24.5
+
+# APT packages to remove
+docker_old_packages:
+  - docker.io
+  - docker-compose
+  - docker-compose-v2
+  - docker-doc
+  - podman-docker
+  - containerd
+  - runc
+
+# APT dependencies
+docker_dependencies:
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+
+# APT packages to install
+docker_packages:
+  - "docker-{{ docker_edition }}"
+  - "docker-{{ docker_edition }}-cli"
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
