@@ -34,3 +34,12 @@
     state: present
     recreate: always
   when: stack_health.rc != 0
+
+- name: "{{ stack_name }} - Deploy extra config files"
+  template:
+    src: "{{ item }}"
+    dest: "{{ services_base_dir }}/{{ stack_name }}/{{ item | basename | regex_replace('\\.j2$', '') }}"
+  with_fileglob:
+    - "templates/{{ stack_name }}/*.j2"
+  ignore_errors: yes
+  register: config_files

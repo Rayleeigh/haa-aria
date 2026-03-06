@@ -15,3 +15,4 @@ grafana_version: latest
 grafana_port: 3000
 node_exporter_image: prom/node-exporter
 node_exporter_version: latest
+grafana_admin_password: changeme
