@@ -1,0 +1,19 @@
+# Homepage — unified service dashboard
+# Web UI: http://aria-ip:3003
+# Configure services, bookmarks, and widgets in /app/config/*.yaml
+# Docs: https://gethomepage.dev/latest/configs/services/
+services:
+  homepage:
+    image: {{ homepage_image }}:{{ homepage_version }}
+    ports:
+      - "{{ homepage_port }}:3000"
+    volumes:
+      - homepage_config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      PUID: 1000
+      PGID: 1000
+    restart: unless-stopped
+
+volumes:
+  homepage_config:

@@ -1,7 +1,21 @@
 - name: Deploy service stacks
   include_tasks: deploy_stack.yml
   loop:
-    - portainer
+    # Phase 1 — Foundation
+    - twingate
+    - ntfy
+    - adguard
     - monitoring
+    # Phase 2 — Operations
+    - portainer
+    - semaphore
+    - vaultwarden
+    - uptime-kuma
+    - homepage
+    # Phase 3 — Polish
+    - authelia
+    - dockge
+    - watchtower
+    - duplicati
   loop_control:
     loop_var: stack_name

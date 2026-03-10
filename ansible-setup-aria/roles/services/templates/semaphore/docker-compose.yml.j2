@@ -1,0 +1,24 @@
+# Semaphore — Ansible web UI
+# Run playbooks, manage inventory, and view execution logs from the browser.
+# Web UI: http://aria-ip:3002
+services:
+  semaphore:
+    image: {{ semaphore_image }}:{{ semaphore_version }}
+    ports:
+      - "{{ semaphore_port }}:3000"
+    environment:
+      SEMAPHORE_DB_DIALECT: bolt
+      SEMAPHORE_ADMIN: admin
+      SEMAPHORE_ADMIN_PASSWORD: {{ semaphore_admin_password }}
+      SEMAPHORE_ADMIN_NAME: Admin
+      SEMAPHORE_ADMIN_EMAIL: admin@aria.local
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_admin_password | b64encode }}"
+    volumes:
+      - semaphore_data:/var/lib/semaphore
+      - semaphore_config:/etc/semaphore
+      - /home/deploy/.ssh:/home/semaphore/.ssh:ro
+    restart: unless-stopped
+
+volumes:
+  semaphore_data:
+  semaphore_config:

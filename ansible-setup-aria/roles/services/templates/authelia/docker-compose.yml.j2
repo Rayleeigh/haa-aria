@@ -1,0 +1,21 @@
+# Authelia — lightweight SSO / identity provider
+# Web UI: http://aria-ip:9091
+# Note: Authelia is most powerful as a forward-auth middleware behind a reverse proxy.
+# For a local homelab without Traefik, it can still provide OIDC for supporting apps.
+# Docs: https://www.authelia.com/configuration/prologue/introduction/
+services:
+  authelia:
+    image: {{ authelia_image }}:{{ authelia_version }}
+    ports:
+      - "{{ authelia_port }}:9091"
+    volumes:
+      - authelia_config:/config
+      - ./authelia-config.yml:/config/configuration.yml:ro
+    environment:
+      AUTHELIA_JWT_SECRET: {{ authelia_jwt_secret }}
+      AUTHELIA_SESSION_SECRET: {{ authelia_session_secret }}
+      AUTHELIA_STORAGE_ENCRYPTION_KEY: {{ authelia_storage_encryption_key }}
+    restart: unless-stopped
+
+volumes:
+  authelia_config:

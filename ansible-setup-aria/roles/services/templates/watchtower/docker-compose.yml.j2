@@ -1,0 +1,17 @@
+# Watchtower — automatic container image updates
+# Checks for new image versions on the configured schedule and recreates containers.
+# Sends update notifications to ntfy via generic webhook (shoutrrr).
+# ntfy topic "watchtower" receives messages: http://aria-ip:8088/watchtower
+services:
+  watchtower:
+    image: {{ watchtower_image }}:{{ watchtower_version }}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_STOPPED: "false"
+      WATCHTOWER_SCHEDULE: "{{ watchtower_schedule }}"
+      WATCHTOWER_NOTIFICATIONS: shoutrrr
+      # Sends to ntfy topic "watchtower" — install ntfy app and subscribe to this topic
+      WATCHTOWER_NOTIFICATION_SHOUTRRR_URL: "generic+http://{{ ansible_host | default('aria') }}:{{ ntfy_port }}/watchtower"
+    restart: unless-stopped

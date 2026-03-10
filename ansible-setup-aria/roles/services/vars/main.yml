@@ -3,16 +3,92 @@ services_base_dir: /opt/services
 
 # Portainer
 portainer_image: portainer/portainer-ce
-portainer_version: latest
+portainer_version: 2.21.5
 portainer_port: 9443
 
 # Monitoring
 prometheus_image: prom/prometheus
-prometheus_version: latest
+prometheus_version: v2.51.2
 prometheus_port: 9090
 grafana_image: grafana/grafana
-grafana_version: latest
+grafana_version: 10.4.3
 grafana_port: 3000
 node_exporter_image: prom/node-exporter
-node_exporter_version: latest
+node_exporter_version: v1.8.1
+cadvisor_image: gcr.io/cadvisor/cadvisor
+cadvisor_version: v0.49.1
+cadvisor_port: 8080
+loki_image: grafana/loki
+loki_version: 2.9.8
+loki_port: 3100
+promtail_image: grafana/promtail
+promtail_version: 2.9.8
+alertmanager_image: prom/alertmanager
+alertmanager_version: v0.27.0
+alertmanager_port: 9093
+# SECURITY: Move grafana_admin_password to Ansible Vault in production
+# ansible-vault encrypt_string 'your-password' --name 'grafana_admin_password'
 grafana_admin_password: changeme
+
+# TwinGate Connector
+# SECURITY: Set these via Ansible Vault — provision tokens from app.twingate.com
+twingate_network: ""         # e.g. your-network.twingate.com
+twingate_access_token: ""    # from TwinGate admin console
+twingate_refresh_token: ""   # from TwinGate admin console
+
+# ntfy (push notifications)
+ntfy_image: binwiederhier/ntfy
+ntfy_version: v2.11.0
+ntfy_port: 8088
+
+# AdGuard Home (DNS + ad blocking)
+adguard_image: adguard/adguardhome
+adguard_version: v0.107.52
+adguard_web_port: 3001
+adguard_dns_port: 53
+
+# Semaphore (Ansible web UI)
+semaphore_image: semaphoreui/semaphore
+semaphore_version: v2.10.22
+semaphore_port: 3002
+# SECURITY: Move semaphore_admin_password to Ansible Vault in production
+semaphore_admin_password: changeme
+
+# Vaultwarden (self-hosted Bitwarden)
+vaultwarden_image: vaultwarden/server
+vaultwarden_version: 1.30.5
+vaultwarden_port: 8181
+
+# Homepage (service dashboard)
+homepage_image: ghcr.io/gethomepage/homepage
+homepage_version: v0.9.2
+homepage_port: 3003
+
+# Uptime Kuma (uptime monitoring)
+uptime_kuma_image: louislam/uptime-kuma
+uptime_kuma_version: 1.23.13
+uptime_kuma_port: 3004
+
+# Authelia (SSO / identity provider)
+authelia_image: authelia/authelia
+authelia_version: 4.38.10
+authelia_port: 9091
+# SECURITY: Set these via Ansible Vault in production
+authelia_jwt_secret: "change-me-to-a-random-string-32chars"
+authelia_session_secret: "change-me-to-another-random-string"
+authelia_storage_encryption_key: "change-me-to-yet-another-32char-key"
+
+# Dockge (Docker Compose stack manager)
+dockge_image: louislam/dockge
+dockge_version: 1.4.2
+dockge_port: 5001
+
+# Watchtower (automatic container updates)
+watchtower_image: containrrr/watchtower
+watchtower_version: 1.7.1
+watchtower_schedule: "0 0 4 * * *"  # 4am daily
+
+# Duplicati (volume backups)
+duplicati_image: lscr.io/linuxserver/duplicati
+duplicati_version: 2.0.9
+duplicati_port: 8200

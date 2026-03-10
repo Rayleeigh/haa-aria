@@ -1,0 +1,55 @@
+---
+# Authelia configuration — local homelab (file-based users, SQLite storage)
+# Add users by editing the users_database.yml file in the config volume.
+# SECURITY: Replace all secrets with values from Ansible Vault in production.
+
+theme: dark
+default_redirection_url: http://{{ ansible_host | default('aria') }}:{{ authelia_port }}
+
+server:
+  host: 0.0.0.0
+  port: 9091
+
+log:
+  level: info
+
+totp:
+  issuer: aria.local
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+    password:
+      algorithm: argon2id
+      iterations: 1
+      key_length: 32
+      salt_length: 16
+      memory: 1024
+      parallelism: 8
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: "*.aria.local"
+      policy: one_factor
+
+session:
+  name: authelia_session
+  expiration: 3600       # 1 hour
+  inactivity: 300        # 5 minutes
+  remember_me_duration: 1M
+  domain: aria.local
+
+regulation:
+  max_retries: 5
+  find_time: 2m
+  ban_time: 5m
+
+storage:
+  local:
+    path: /config/db.sqlite3
+
+notifier:
+  disable_startup_check: true
+  filesystem:
+    filename: /config/notification.txt

@@ -1,0 +1,23 @@
+# Duplicati — volume and file backup with a web GUI
+# Web UI: http://aria-ip:8200
+# Schedule backups of /opt/services (all Docker volumes) to local, SFTP, S3, or Backblaze.
+# First-run wizard will guide you through creating a backup job.
+services:
+  duplicati:
+    image: {{ duplicati_image }}:{{ duplicati_version }}
+    ports:
+      - "{{ duplicati_port }}:8200"
+    environment:
+      PUID: 0
+      PGID: 0
+      TZ: UTC
+    volumes:
+      - duplicati_config:/config
+      # Mount Docker volumes root so all service data is accessible for backup
+      - /var/lib/docker/volumes:/source/docker-volumes:ro
+      # Mount service compose files
+      - {{ services_base_dir }}:/source/services:ro
+    restart: unless-stopped
+
+volumes:
+  duplicati_config:

@@ -1,0 +1,19 @@
+# ntfy — self-hosted push notification server
+# Mobile apps: iOS & Android available at https://ntfy.sh
+# Alertmanager, Uptime Kuma, and Watchtower all send alerts here.
+services:
+  ntfy:
+    image: {{ ntfy_image }}:{{ ntfy_version }}
+    ports:
+      - "{{ ntfy_port }}:80"
+    volumes:
+      - ntfy_cache:/var/cache/ntfy
+      - ntfy_etc:/etc/ntfy
+    environment:
+      TZ: UTC
+    command: serve
+    restart: unless-stopped
+
+volumes:
+  ntfy_cache:
+  ntfy_etc:

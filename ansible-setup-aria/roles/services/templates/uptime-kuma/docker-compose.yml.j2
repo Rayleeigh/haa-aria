@@ -1,0 +1,14 @@
+# Uptime Kuma — uptime and endpoint monitoring
+# Web UI: http://aria-ip:3004
+# Monitor HTTP(S), TCP, DNS, ping, and Docker container status.
+services:
+  uptime-kuma:
+    image: {{ uptime_kuma_image }}:{{ uptime_kuma_version }}
+    ports:
+      - "{{ uptime_kuma_port }}:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  uptime_kuma_data:

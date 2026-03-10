@@ -1,0 +1,20 @@
+# Vaultwarden — self-hosted Bitwarden-compatible password manager
+# Web UI: http://aria-ip:8181
+# Compatible with all official Bitwarden client apps.
+# After first run, visit /admin to configure the instance.
+services:
+  vaultwarden:
+    image: {{ vaultwarden_image }}:{{ vaultwarden_version }}
+    ports:
+      - "{{ vaultwarden_port }}:80"
+    environment:
+      WEBSOCKET_ENABLED: "true"
+      SIGNUPS_ALLOWED: "true"
+      # Restrict signups to specific email domains once team is set up:
+      # SIGNUPS_DOMAINS_WHITELIST: "aria.local"
+    volumes:
+      - vaultwarden_data:/data
+    restart: unless-stopped
+
+volumes:
+  vaultwarden_data:

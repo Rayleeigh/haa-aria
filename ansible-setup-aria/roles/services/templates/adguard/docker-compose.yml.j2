@@ -1,0 +1,21 @@
+# AdGuard Home — network-wide DNS, ad blocking, and local DNS records
+# Web UI: http://aria-ip:3001
+# Set as your router's DNS server (or individual device DNS) to use.
+# Note: port 53 requires stopping systemd-resolved on Ubuntu first:
+#   sudo systemctl disable --now systemd-resolved
+#   echo "nameserver 127.0.0.1" | sudo tee /etc/resolv.conf
+services:
+  adguardhome:
+    image: {{ adguard_image }}:{{ adguard_version }}
+    ports:
+      - "{{ adguard_dns_port }}:53/tcp"
+      - "{{ adguard_dns_port }}:53/udp"
+      - "{{ adguard_web_port }}:3000/tcp"
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    restart: unless-stopped
+
+volumes:
+  adguard_work:
+  adguard_conf:

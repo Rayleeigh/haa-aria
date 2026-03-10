@@ -1,0 +1,19 @@
+# Dockge — Docker Compose stack manager
+# Web UI: http://aria-ip:5001
+# Provides a clean UI to create, edit, start, and stop compose stacks.
+# Mounts /opt/services so all existing stacks are visible and manageable.
+services:
+  dockge:
+    image: {{ dockge_image }}:{{ dockge_version }}
+    ports:
+      - "{{ dockge_port }}:5001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockge_data:/app/data
+      - {{ services_base_dir }}:{{ services_base_dir }}
+    environment:
+      DOCKGE_STACKS_DIR: {{ services_base_dir }}
+    restart: unless-stopped
+
+volumes:
+  dockge_data:
