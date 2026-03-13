@@ -1,0 +1,43 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+title: "Aria — Stack Deployment Sequence (deploy_stack.yml)" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+seq: {
+  shape: sequence_diagram
+
+  ansible: "Ansible"
+  fs: "Filesystem\n/opt/services"
+  tmpl: "Role Templates\n(Jinja2 .j2)"
+  docker: "Docker Engine"
+
+  ansible -> fs: "1. file: mkdir /opt/services/{stack_name}\n   mode: 0755 · state: directory"
+
+  ansible -> tmpl: "2. Read templates/{stack}/docker-compose.yml.j2\n   (Jinja2 renders vars + vault secrets)"
+  tmpl -> ansible: "2. Rendered docker-compose.yml"
+  ansible -> fs: "2. Write /opt/services/{stack}/docker-compose.yml\n   register: compose_file (tracks changes)"
+
+  ansible -> tmpl: "3. with_fileglob: role_path/templates/{stack}/*.j2\n   (excludes docker-compose.yml.j2)\n   Renders: prometheus.yml · loki-config.yml\n            promtail-config.yml · alertmanager.yml\n            alerting_rules.yml · authelia-config.yml"
+  tmpl -> ansible: "3. Rendered config files"
+  ansible -> fs: "3. Write config files to /opt/services/{stack}/\n   BEFORE starting containers — they mount these as volumes\n   register: config_files (tracks changes)"
+
+  ansible -> docker: "4. community.docker.docker_compose_v2\n   project_src: /opt/services/{stack}\n   state: present  (docker compose up)"
+  docker -> ansible: "4. Containers started"
+
+  ansible -> ansible: "5. Check: compose_file.changed\n          OR any config_files.results changed?"
+  ansible -> docker: "5. (if changed) docker_compose_v2\n   state: present · recreate: always\n   (forces container recreation with new config)"
+
+  ansible -> docker: "6. ansible.builtin.command:\n   docker compose ps --format json\n   register: stack_health"
+  docker -> ansible: "6. Container states JSON"
+  ansible -> ansible: "6. failed_when: false · changed_when: false"
+
+  ansible -> docker: "7. (if stack_health.rc != 0) docker_compose_v2\n   state: present · recreate: always\n   (auto-recovery for unhealthy stacks)"
+}

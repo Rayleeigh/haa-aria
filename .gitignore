@@ -1,3 +1,17 @@
 *.vscode
 *.env
 *.log
+credentials.*
+creds.*
+*.pem
+*.key
+*.crt
+*.pfx
+*.cer
+
+# Ansible Vault secrets — never commit plaintext secrets
+ansible-setup-aria/group_vars/all/vault.yml
+ansible-setup-aria/host_vars/*/vault.yml
+# Encrypted vault file is safe to commit; plaintext override is not:
+ansible-setup-aria/**/.vault_pass
+.vault_pass

@@ -1,0 +1,23 @@
+# =============================================================================
+# Aria (l-srv-inf-001) — Infrastructure Architecture
+# Theme: Colorblind Clear (theme-id: 8)
+#
+# Split into individual files under diagrams/ to avoid D2 board-separator
+# parsing issues. Render each file separately:
+#
+#   cd ansible-setup-aria
+#   for f in diagrams/*.d2; do d2 --theme 8 "$f" "${f%.d2}.svg"; done
+#
+# Or render a single diagram:
+#   d2 --theme 8 diagrams/01-overview.d2 diagrams/01-overview.svg
+#
+# Files:
+#   diagrams/01-overview.d2              — Infrastructure Overview
+#   diagrams/02-monitoring-data-flow.d2  — Monitoring Stack Data Flow
+#   diagrams/03-ansible-architecture.d2  — Ansible Playbook Architecture
+#   diagrams/04-deploy-sequence.d2       — Stack Deployment Sequence
+#   diagrams/05-secrets-flow.d2          — Secrets Management Flow
+#   diagrams/06-twingate-access.d2       — TwinGate Remote Access
+#   diagrams/07-port-image-reference.d2  — Service Port & Image Reference
+#   diagrams/08-volumes-backup.d2        — Docker Volumes & Backup Coverage
+# =============================================================================

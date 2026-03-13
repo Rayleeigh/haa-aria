@@ -1,0 +1,94 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+direction: right
+
+title: "Aria — Monitoring Stack Data Flow" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+host: Host OS {
+  proc: "/proc\n(CPU · RAM · Net)"
+  sys: "/sys\n(Disk · Block devices)"
+  rootfs: "/rootfs\n(Filesystem stats)"
+  syslog: "/var/log/syslog"
+  authlog: "/var/log/auth.log"
+}
+
+docker: Docker Engine {
+  containers: "Container stdout/stderr\n/var/lib/docker/containers/**"
+  sock: "Docker socket\n/var/run/docker.sock\n(SD + runtime stats)"
+}
+
+node_exp: Node Exporter {
+  label: "Node Exporter v1.8.1\nMounts /proc · /sys · /rootfs\npid: host\nExposes metrics :9100\nCollects: CPU, memory, disk,\nnetwork, filesystem, NTP, etc."
+}
+
+cadvisor_c: cAdvisor {
+  label: "cAdvisor v0.49.1\nPrivileged\nDevice: /dev/kmsg\nMounts: / · /var/run · /sys\n        /var/lib/docker · /cgroup\nExposes metrics :8080\nCollects: per-container\nCPU · RAM · net · disk I/O"
+}
+
+promtail_c: Promtail {
+  label: "Promtail 2.9.8\nDocker service discovery (sock)\nRefresh interval: 5s\nAuto-labels:\n  container (name)\n  logstream\n  compose_project\n  compose_service\nTails: /var/log/syslog\n       /var/log/auth.log\nPushes to Loki push API"
+}
+
+prometheus_s: Prometheus {
+  label: "Prometheus v2.51.2\n:9090\nScrape interval: 15s\nEvaluation interval: 15s\nRetention: 30 days\nTargets:\n  localhost:9090 (self)\n  node-exporter:9100\n  cadvisor:8080\n  alertmanager:9093\nConfig: /opt/services/monitoring/prometheus.yml\nRules:  /opt/services/monitoring/alerting_rules.yml"
+  shape: cylinder
+}
+
+loki_s: Loki {
+  label: "Loki 2.9.8\n:3100\nSchema: TSDB v13\nStorage: filesystem\nChunks: /loki/chunks\nRules:  /loki/rules\nQuery cache: 100MB (embedded)\nRetention: 744h (31 days)\nCompactor: every 10m\nDelete delay: 2h\nConfig: /opt/services/monitoring/loki-config.yml"
+  shape: cylinder
+}
+
+rules: Alert Rules {
+  label: "alerting_rules.yml\n\nhost group:\n  HostDown         up==0 · 1m · critical\n  HighCpuUsage     CPU>85% · 5m · warning\n  HighMemUsage     RAM>85% · 5m · warning\n  DiskSpaceLow     disk>80% · 5m · warning\n  DiskSpaceCritical  disk>95% · 1m · critical\n\ncontainers group:\n  ContainerHighCpu   ctr CPU>80% · 5m · warning\n  ContainerHighMem   ctr RAM>80% limit · 5m · warning"
+}
+
+alertmgr: Alertmanager {
+  label: "Alertmanager v0.27.0\n:9093\nReceiver: ntfy\nGroup by: alertname, job\nGroup wait: 30s\nGroup interval: 5m\nRepeat interval: 4h\nResolve timeout: 5m\nInhibit: critical suppresses warning\n         (same alertname + instance)"
+}
+
+ntfy_s: ntfy {
+  label: "ntfy v2.11.0\n:8088\nTopic: /alerts\nsend_resolved: true\nHTTP POST webhook (no TLS)"
+  shape: rectangle
+}
+
+engineer: Engineer {
+  shape: person
+  label: "Engineer\n(ntfy mobile / desktop app)"
+}
+
+grafana_s: Grafana {
+  label: "Grafana 10.4.3\n:3000\nDatasource 1: Prometheus (PromQL)\nDatasource 2: Loki (LogQL)\nAdmin signups: disabled\nAdmin password: vault"
+}
+
+host.proc -> node_exp: "bind mount ro"
+host.sys -> node_exp: "bind mount ro"
+host.rootfs -> node_exp: "bind mount ro"
+host.syslog -> promtail_c: "tail"
+host.authlog -> promtail_c: "tail"
+
+docker.containers -> promtail_c: "tail (bind mount ro)"
+docker.sock -> cadvisor_c: "runtime stats"
+docker.sock -> promtail_c: "service discovery"
+
+node_exp -> prometheus_s: "GET :9100/metrics\nevery 15s"
+cadvisor_c -> prometheus_s: "GET :8080/metrics\nevery 15s"
+
+promtail_c -> loki_s: "POST /loki/api/v1/push\n(structured log lines)"
+
+rules -> prometheus_s: "evaluated every 15s\nagainst live metrics"
+prometheus_s -> alertmgr: "POST /api/v2/alerts\n(threshold breached)"
+alertmgr -> ntfy_s: "POST /alerts\n(JSON webhook payload)"
+ntfy_s -> engineer: "push notification\n(iOS · Android · Desktop)"
+
+prometheus_s -> grafana_s: "PromQL queries"
+loki_s -> grafana_s: "LogQL queries"

@@ -1,0 +1,20 @@
+# Public variables — safe to commit.
+# Sensitive values are pulled from vault.yml (never committed).
+# To create/edit the vault:
+#   ansible-vault create ansible-setup-aria/group_vars/all/vault.yml
+#   ansible-vault edit   ansible-setup-aria/group_vars/all/vault.yml
+#
+# To run the playbook with vault:
+#   ansible-playbook site.yml --ask-vault-pass
+#   ansible-playbook site.yml --vault-password-file .vault_pass
+
+# These variables reference their vault counterparts defined in vault.yml
+grafana_admin_password:       "{{ vault_grafana_admin_password }}"
+semaphore_admin_password:     "{{ vault_semaphore_admin_password }}"
+semaphore_encryption_key:     "{{ vault_semaphore_encryption_key }}"
+twingate_network:             "{{ vault_twingate_network }}"
+twingate_access_token:        "{{ vault_twingate_access_token }}"
+twingate_refresh_token:       "{{ vault_twingate_refresh_token }}"
+authelia_jwt_secret:          "{{ vault_authelia_jwt_secret }}"
+authelia_session_secret:      "{{ vault_authelia_session_secret }}"
+authelia_storage_encryption_key: "{{ vault_authelia_storage_encryption_key }}"

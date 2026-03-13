@@ -1,0 +1,64 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+direction: right
+
+title: "Aria — TwinGate Zero-Trust Remote Access" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+engineer: Engineer {
+  shape: person
+  label: "Engineer\nTwinGate client app\n(iOS · Android · macOS · Windows · Linux)"
+}
+
+tg_cloud: TwinGate Cloud {
+  label: "TwinGate Cloud\napp.twingate.com\n─────────────────\nControl plane\nIdentity verification\nAccess policy enforcement\nRelay orchestration\nNo data passes through cloud\n(only signalling)"
+  shape: cloud
+}
+
+internet: Internet {
+  shape: cloud
+  style.stroke-dash: 5
+  label: "Internet\n(public)"
+}
+
+home_net: Home Network (LAN) {
+
+  router: Router {
+    label: "Home Router\n─────────────────\n⚠ Port forwarding: NONE\n⚠ No inbound rules\n⚠ No DMZ\nAll unsolicited inbound BLOCKED\nOnly outbound connections allowed"
+    style.stroke-dash: 4
+  }
+
+  aria_host: Aria — l-srv-inf-001 {
+    style.stroke-width: 3
+
+    connector: TwinGate Connector Container {
+      label: "TwinGate Connector\ntwingate/connector:1\n─────────────────\nNo bound host ports\nOutbound-only connection to TwinGate relay\nRegistered to: twingate_network (vault)\nCredentials:\n  TWINGATE_ACCESS_TOKEN  (vault)\n  TWINGATE_REFRESH_TOKEN (vault)\n  TWINGATE_NETWORK       (vault)\nsysctls:\n  net.ipv4.ping_group_range=0 2147483647"
+    }
+
+    services: Internal Services {
+      label: "All services on Aria LAN IP\n─────────────────\nPortainer   :9443\nGrafana     :3000\nSemaphore   :3002\nVaultwarden :8181\nHomepage    :3003\nUptime Kuma :3004\nAdGuard     :3001\nntfy        :8088\nPrometheus  :9090\nAlertmanager:9093\nLoki        :3100\nAuthelia    :9091\nDockge      :5001\nDuplicati   :8200"
+    }
+
+    adguard: AdGuard Home {
+      label: "AdGuard Home\n:53 TCP+UDP\n─────────────────\nProvides aria.local DNS\nDevices point DNS to Aria IP\nLocal records defined in\nAdGuard web UI"
+      shape: cylinder
+    }
+  }
+}
+
+engineer -> tg_cloud: "1. Engineer authenticates\n   (identity verified by TwinGate)"
+tg_cloud -> engineer: "2. Access token issued\n   (access policy checked)"
+engineer -> internet: "3. Encrypted WireGuard-based tunnel\n   (initiated by client app)"
+internet -> home_net.aria_host.connector: "4. TwinGate relay connects to connector\n   (connector initiated the outbound session)"
+home_net.aria_host.connector -> home_net.aria_host.services: "5. Traffic proxied\n   to internal service"
+home_net.aria_host.services -> home_net.aria_host.connector: "6. Response returned"
+home_net.aria_host.connector -> engineer: "7. Response delivered\n   via encrypted tunnel"
+engineer -> home_net.aria_host.adguard: "8. (on LAN) DNS queries\n   resolve aria.local names"

@@ -1,0 +1,63 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+direction: down
+
+title: "Aria — Service Port and Image Reference" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+phase1_table: Phase 1 — Foundation {
+  shape: sql_table
+  twingate_connector: "twingate/connector:1 · no bound ports · zero-trust access (outbound only)"
+  ntfy: "binwiederhier/ntfy:v2.11.0 · :8088 · push notifications"
+  adguard_web: "adguard/adguardhome:v0.107.52 · :3001 · web UI"
+  adguard_dns: "adguard/adguardhome:v0.107.52 · :53/tcp+udp · DNS resolver"
+}
+
+monitoring_table: Phase 1 — Monitoring Stack {
+  shape: sql_table
+  prometheus: "prom/prometheus:v2.51.2 · :9090 · metrics TSDB · 30d retention"
+  grafana: "grafana/grafana:10.4.3 · :3000 · dashboards"
+  node_exporter: "prom/node-exporter:v1.8.1 · internal :9100 · host metrics"
+  cadvisor: "gcr.io/cadvisor/cadvisor:v0.49.1 · internal :8080 · container metrics"
+  loki: "grafana/loki:2.9.8 · :3100 · log storage · 31d retention"
+  promtail: "grafana/promtail:2.9.8 · internal :9080 · log shipper"
+  alertmanager: "prom/alertmanager:v0.27.0 · :9093 · alert routing to ntfy"
+}
+
+phase2_table: Phase 2 — Operations {
+  shape: sql_table
+  portainer: "portainer/portainer-ce:2.21.5 · :9443 HTTPS · container management UI"
+  semaphore: "semaphoreui/semaphore:v2.10.22 · :3002 · Ansible web UI"
+  vaultwarden: "vaultwarden/server:1.30.5 · :8181 · self-hosted Bitwarden"
+  uptime_kuma: "louislam/uptime-kuma:1.23.13 · :3004 · uptime monitoring"
+  homepage: "ghcr.io/gethomepage/homepage:v0.9.2 · :3003 · service dashboard"
+}
+
+phase3_table: Phase 3 — Polish {
+  shape: sql_table
+  authelia: "authelia/authelia:4.38.10 · :9091 · SSO / identity provider"
+  dockge: "louislam/dockge:1.4.2 · :5001 · compose stack manager UI"
+  watchtower: "containrrr/watchtower:1.7.1 · no port · auto image updates (4am daily)"
+  duplicati: "lscr.io/linuxserver/duplicati:2.0.9 · :8200 · scheduled volume backups"
+}
+
+env_vars_table: Key Environment Variables (Vault-Sourced) {
+  shape: sql_table
+  GF_SECURITY_ADMIN_PASSWORD: "grafana container · from vault_grafana_admin_password"
+  SEMAPHORE_ADMIN_PASSWORD: "semaphore container · from vault_semaphore_admin_password"
+  SEMAPHORE_ACCESS_KEY_ENCRYPTION: "semaphore container · from vault_semaphore_encryption_key"
+  TWINGATE_NETWORK: "twingate-connector · from vault_twingate_network"
+  TWINGATE_ACCESS_TOKEN: "twingate-connector · from vault_twingate_access_token"
+  TWINGATE_REFRESH_TOKEN: "twingate-connector · from vault_twingate_refresh_token"
+  AUTHELIA_JWT_SECRET: "authelia container · from vault_authelia_jwt_secret (64+ chars)"
+  AUTHELIA_SESSION_SECRET: "authelia container · from vault_authelia_session_secret (64+ chars)"
+  AUTHELIA_STORAGE_ENCRYPTION_KEY: "authelia container · from vault_authelia_storage_encryption_key (32+ chars)"
+}

@@ -10,6 +10,18 @@
     dest: "{{ services_base_dir }}/{{ stack_name }}/docker-compose.yml"
   register: compose_file
 
+# Deploy extra configs BEFORE starting services — containers mount these as volumes at startup.
+# Fix: use role_path absolute path so Ansible finds files in templates/ not files/ directory.
+- name: "{{ stack_name }} - Deploy extra config files"
+  template:
+    src: "{{ item }}"
+    dest: "{{ services_base_dir }}/{{ stack_name }}/{{ item | basename | regex_replace('\\.j2$', '') }}"
+  with_fileglob:
+    - "{{ role_path }}/templates/{{ stack_name }}/*.j2"
+  when: item | basename != 'docker-compose.yml.j2'
+  ignore_errors: true
+  register: config_files
+
 - name: "{{ stack_name }} - Start services"
   community.docker.docker_compose_v2:
     project_src: "{{ services_base_dir }}/{{ stack_name }}"
@@ -20,7 +32,7 @@
     project_src: "{{ services_base_dir }}/{{ stack_name }}"
     state: present
     recreate: always
-  when: compose_file.changed
+  when: compose_file.changed or (config_files.results | selectattr('changed', 'equalto', true) | list | length > 0)
 
 - name: "{{ stack_name }} - Health check"
   ansible.builtin.command: docker compose -f {{ services_base_dir }}/{{ stack_name }}/docker-compose.yml ps --format json
@@ -34,12 +46,3 @@
     state: present
     recreate: always
   when: stack_health.rc != 0
-
-- name: "{{ stack_name }} - Deploy extra config files"
-  template:
-    src: "{{ item }}"
-    dest: "{{ services_base_dir }}/{{ stack_name }}/{{ item | basename | regex_replace('\\.j2$', '') }}"
-  with_fileglob:
-    - "templates/{{ stack_name }}/*.j2"
-  ignore_errors: yes
-  register: config_files

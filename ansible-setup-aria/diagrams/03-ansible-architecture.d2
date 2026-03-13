@@ -1,0 +1,96 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+direction: down
+
+title: "Aria — Ansible Playbook Architecture" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+eng: Engineer {
+  shape: person
+}
+
+cmd: Command {
+  shape: parallelogram
+  label: "ansible-playbook site.yml\n  -i inventory/hosts.ini\n  --ask-vault-pass\n  (or --vault-password-file .vault_pass)"
+}
+
+inv: Inventory and Variables {
+  hosts_ini: hosts.ini {
+    label: "inventory/hosts.ini\n[local]\naria ansible_host=127.0.0.1\n     ansible_connection=local\n[local:vars]\nansible_python_interpreter=/usr/bin/python3"
+    shape: rectangle
+  }
+
+  vars_yml: vars.yml {
+    label: "group_vars/all/vars.yml\n✓ safe to commit\nMaps public names to vault_ names\ngrafana_admin_password\nsemaphore_admin_password\nsemaphore_encryption_key\ntwingate_network · _access_token · _refresh_token\nauthelia_jwt_secret · _session_secret\nauthelia_storage_encryption_key"
+    shape: rectangle
+  }
+
+  vault_yml: vault.yml {
+    label: "group_vars/all/vault.yml\n⚠ AES-256 encrypted\n⚠ gitignored — never commit plaintext\nEncrypt: ansible-vault encrypt vault.yml\nEdit:    ansible-vault edit vault.yml\nContains all vault_* secret values"
+    shape: stored_data
+  }
+}
+
+site_yml: site.yml {
+  label: "site.yml\n- hosts: local\n  become: true\n  roles:\n    - docker\n    - services"
+}
+
+docker_role: roles/docker {
+
+  d_vars: vars/main.yml {
+    label: "docker_edition: ce\ndocker_user: deploy\ndocker_compose_version: v2.24.5\nPackages to remove (7 items)\nDependencies to install (4 items)\nPackages to install (5 items)"
+  }
+
+  d_tasks: tasks/main.yml {
+    label: "1. Remove old Docker packages\n   (docker.io · docker-compose · docker-compose-v2\n    docker-doc · podman-docker · containerd · runc)\n2. Install APT dependencies\n   (ca-certificates · curl · gnupg · lsb-release)\n3. Add Docker GPG key\n   (download.docker.com/linux/ubuntu/gpg)\n4. Add Docker APT repository\n   (stable · amd64 · ansible_lsb.codename)\n5. Install Docker CE packages\n   (docker-ce · docker-ce-cli · containerd.io\n    docker-buildx-plugin · docker-compose-plugin)\n6. Add 'deploy' user to docker group\n7. Create systemd override directory\n8. Deploy docker-override.conf\n   (triggers: Force restart Docker handler)\n9. Start + enable Docker (systemd)\n10. Health check: docker info\n11. Recover if unhealthy (systemd restart + daemon_reload)"
+  }
+
+  d_handlers: handlers/main.yml {
+    label: "Restart Docker\nStop Docker\nForce restart Docker (daemon_reload: yes)"
+  }
+
+  d_tmpl: templates/ {
+    label: "docker-override.conf.j2\n[Service]\nRestart=always\nRestartSec=5s\nStartLimitIntervalSec=60\nStartLimitBurst=3\nwrites to: /etc/systemd/system/docker.service.d/override.conf"
+  }
+}
+
+services_role: roles/services {
+
+  s_meta: meta/main.yml {
+    label: "dependencies:\n  - role: docker\n\n(enforces docker role runs first)"
+  }
+
+  s_vars: vars/main.yml {
+    label: "services_base_dir: /opt/services\n\n13 stacks defined with:\n  {stack}_image\n  {stack}_version\n  {stack}_port\n\nSecrets referenced by name only\n(values come from vault via group_vars)"
+  }
+
+  s_main: tasks/main.yml {
+    label: "Loop variable: stack_name\nIncludes deploy_stack.yml for each:\n\nPhase 1 — Foundation:\n  twingate · ntfy · adguard · monitoring\n\nPhase 2 — Operations:\n  portainer · semaphore · vaultwarden\n  uptime-kuma · homepage\n\nPhase 3 — Polish:\n  authelia · dockge · watchtower · duplicati"
+  }
+
+  s_deploy: tasks/deploy_stack.yml {
+    label: "Per-stack deployment tasks (7 steps)\nSee diagram 04 for sequence detail"
+  }
+
+  s_tmpl: templates/ {
+    label: "13 subdirectories (one per stack)\nEach contains docker-compose.yml.j2\n\nExtra config files (deployed before start):\n  monitoring/   prometheus.yml.j2\n                alerting_rules.yml.j2\n                alertmanager.yml.j2\n                loki-config.yml.j2\n                promtail-config.yml.j2\n  authelia/     authelia-config.yml.j2"
+  }
+}
+
+eng -> cmd
+cmd -> site_yml
+cmd -> inv: "loads inventory\n+ decrypts vault"
+site_yml -> docker_role: "role 1"
+site_yml -> services_role: "role 2"
+services_role.s_meta -> docker_role: "meta dependency\n(docker runs first)"
+services_role.s_main -> services_role.s_deploy: "include_tasks\n(13 iterations)"
+services_role.s_deploy -> services_role.s_tmpl: "reads templates\nfor current stack_name"
+docker_role.d_tasks -> docker_role.d_handlers: "notify on\nconfig change"

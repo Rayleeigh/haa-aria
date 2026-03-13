@@ -13,9 +13,6 @@ receivers:
     webhook_configs:
       - url: 'http://{{ ansible_host | default("aria") }}:{{ ntfy_port }}/alerts'
         send_resolved: true
-        http_config:
-          tls_config:
-            insecure_skip_verify: true
 
 inhibit_rules:
   - source_match:

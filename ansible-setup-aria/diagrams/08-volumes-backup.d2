@@ -1,0 +1,154 @@
+vars: {
+  d2-config: {
+    theme-id: 8
+  }
+}
+
+direction: down
+
+title: "Aria — Docker Volumes and Backup Coverage" {
+  shape: text
+  near: top-center
+  style.font-size: 28
+  style.bold: true
+}
+
+monitoring_vols: monitoring stack volumes {
+
+  prometheus_data: prometheus_data {
+    label: "prometheus_data\nOwner: prometheus container\nContents: TSDB blocks · WAL\nRetention: 30 days (auto-purged)\nGrowth: ~50-200MB typical"
+    shape: cylinder
+  }
+
+  grafana_data: grafana_data {
+    label: "grafana_data\nOwner: grafana container\nContents: SQLite DB · dashboards\nplugins · sessions · alert state"
+    shape: cylinder
+  }
+
+  loki_data: loki_data {
+    label: "loki_data\nOwner: loki container\nContents: log chunks · index (TSDB v13)\ncompactor working dir\nRetention: 31 days (compactor enforced)"
+    shape: cylinder
+  }
+
+  alertmanager_data: alertmanager_data {
+    label: "alertmanager_data\nOwner: alertmanager container\nContents: silences · nflog\n(notification log)"
+    shape: cylinder
+  }
+}
+
+portainer_vols: portainer stack volumes {
+  portainer_data: portainer_data {
+    label: "portainer_data\nOwner: portainer container\nContents: SQLite DB\nusers · endpoints · configs"
+    shape: cylinder
+  }
+}
+
+ntfy_vols: ntfy stack volumes {
+  ntfy_cache: ntfy_cache {
+    label: "ntfy_cache\n/var/cache/ntfy\nMessage cache"
+    shape: cylinder
+  }
+  ntfy_etc: ntfy_etc {
+    label: "ntfy_etc\n/etc/ntfy\nConfiguration"
+    shape: cylinder
+  }
+}
+
+adguard_vols: adguard stack volumes {
+  adguard_work: adguard_work {
+    label: "adguard_work\n/opt/adguardhome/work\nQuery logs · statistics"
+    shape: cylinder
+  }
+  adguard_conf: adguard_conf {
+    label: "adguard_conf\n/opt/adguardhome/conf\nDNS config · filter lists\ncustom DNS records (aria.local)"
+    shape: cylinder
+  }
+}
+
+semaphore_vols: semaphore stack volumes {
+  semaphore_data: semaphore_data {
+    label: "semaphore_data\n/var/lib/semaphore\nBoltDB database\nprojects · tasks · keys"
+    shape: cylinder
+  }
+  semaphore_config: semaphore_config {
+    label: "semaphore_config\n/etc/semaphore\nApp configuration"
+    shape: cylinder
+  }
+}
+
+vaultwarden_vols: vaultwarden stack volumes {
+  vaultwarden_data: vaultwarden_data {
+    label: "vaultwarden_data\n/data\nSQLite DB · RSA keys\nattachments · sends\n⚠ CRITICAL — back up regularly"
+    shape: cylinder
+    style.stroke-width: 3
+  }
+}
+
+homepage_vols: homepage stack volumes {
+  homepage_config: homepage_config {
+    label: "homepage_config\n/app/config\nYAML service configs\nwidgets · bookmarks"
+    shape: cylinder
+  }
+}
+
+uptime_kuma_vols: uptime-kuma stack volumes {
+  uptime_kuma_data: uptime_kuma_data {
+    label: "uptime_kuma_data\n/app/data\nSQLite DB\nmonitors · history · alerts"
+    shape: cylinder
+  }
+}
+
+authelia_vols: authelia stack volumes {
+  authelia_config: authelia_config {
+    label: "authelia_config\n/config\nSQLite DB · users_database.yml\nnotification.txt\n⚠ Contains user accounts"
+    shape: cylinder
+    style.stroke-width: 3
+  }
+}
+
+dockge_vols: dockge stack volumes {
+  dockge_data: dockge_data {
+    label: "dockge_data\n/app/data\nApp state"
+    shape: cylinder
+  }
+}
+
+duplicati_vols: duplicati stack volumes {
+  duplicati_config: duplicati_config {
+    label: "duplicati_config\n/config\nBackup job definitions\nschedules · targets\ncredentials (encrypted)"
+    shape: cylinder
+  }
+}
+
+host_paths: Host Bind Mounts {
+  docker_sock: "/var/run/docker.sock\nportainer · cadvisor\npromtail · homepage · dockge\nwatchtower"
+  docker_vols_path: "/var/lib/docker/volumes\nduplicati (backup source, ro)"
+  proc: "/proc · /sys · /rootfs\nnode-exporter (metrics)"
+  docker_containers: "/var/lib/docker/containers\npromtail (log tailing, ro)"
+  var_log: "/var/log\npromtail (syslog · auth.log, ro)"
+  cgroup: "/cgroup\ncadvisor (container isolation)"
+  ssh_keys: "/home/deploy/.ssh\nsemaphore (run playbooks, ro)"
+  opt_services: "/opt/services\ndockge (stack management)\nduplicati (compose backup source, ro)"
+}
+
+duplicati_svc: Duplicati Backup Service {
+  label: "Duplicati 2.0.9\n:8200\nBackup sources:\n  /var/lib/docker/volumes (all volumes, ro)\n  /opt/services (compose files, ro)\nBackup targets:\n  local filesystem\n  SFTP (remote server)\n  S3 / Backblaze B2\nScheduling: via web UI\nEncryption: AES-256 (configurable)\nDeduplication: block-level"
+}
+
+restore: Restore Process {
+  label: "Restore:\n1. Deploy fresh Aria with Ansible\n2. Stop target stack\n3. Restore volume from Duplicati\n4. Start stack\n(duplicati_config backed up last —\nrestore it first to recover job defs)"
+  shape: parallelogram
+}
+
+duplicati_svc -> host_paths.docker_vols_path: "backup source\n(all named volumes)"
+duplicati_svc -> host_paths.opt_services: "backup source\n(compose files)"
+
+monitoring_vols.prometheus_data -> duplicati_svc: "backed up"
+monitoring_vols.grafana_data -> duplicati_svc: "backed up"
+monitoring_vols.loki_data -> duplicati_svc: "backed up"
+vaultwarden_vols.vaultwarden_data -> duplicati_svc: "⚠ CRITICAL backup"
+authelia_vols.authelia_config -> duplicati_svc: "⚠ CRITICAL backup"
+portainer_vols.portainer_data -> duplicati_svc: "backed up"
+semaphore_vols.semaphore_data -> duplicati_svc: "backed up"
+
+duplicati_svc -> restore: "on disaster recovery"

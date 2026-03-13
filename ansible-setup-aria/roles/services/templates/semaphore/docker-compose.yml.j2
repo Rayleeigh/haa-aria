@@ -12,7 +12,7 @@ services:
       SEMAPHORE_ADMIN_PASSWORD: {{ semaphore_admin_password }}
       SEMAPHORE_ADMIN_NAME: Admin
       SEMAPHORE_ADMIN_EMAIL: admin@aria.local
-      SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_admin_password | b64encode }}"
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_encryption_key }}"
     volumes:
       - semaphore_data:/var/lib/semaphore
       - semaphore_config:/etc/semaphore

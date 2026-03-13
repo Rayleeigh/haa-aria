@@ -26,15 +26,10 @@ promtail_version: 2.9.8
 alertmanager_image: prom/alertmanager
 alertmanager_version: v0.27.0
 alertmanager_port: 9093
-# SECURITY: Move grafana_admin_password to Ansible Vault in production
-# ansible-vault encrypt_string 'your-password' --name 'grafana_admin_password'
-grafana_admin_password: changeme
+# grafana_admin_password → set in group_vars/all/vault.yml
 
 # TwinGate Connector
-# SECURITY: Set these via Ansible Vault — provision tokens from app.twingate.com
-twingate_network: ""         # e.g. your-network.twingate.com
-twingate_access_token: ""    # from TwinGate admin console
-twingate_refresh_token: ""   # from TwinGate admin console
+# twingate_network / twingate_access_token / twingate_refresh_token → set in group_vars/all/vault.yml
 
 # ntfy (push notifications)
 ntfy_image: binwiederhier/ntfy
@@ -51,8 +46,7 @@ adguard_dns_port: 53
 semaphore_image: semaphoreui/semaphore
 semaphore_version: v2.10.22
 semaphore_port: 3002
-# SECURITY: Move semaphore_admin_password to Ansible Vault in production
-semaphore_admin_password: changeme
+# semaphore_admin_password → set in group_vars/all/vault.yml
 
 # Vaultwarden (self-hosted Bitwarden)
 vaultwarden_image: vaultwarden/server
@@ -73,10 +67,7 @@ uptime_kuma_port: 3004
 authelia_image: authelia/authelia
 authelia_version: 4.38.10
 authelia_port: 9091
-# SECURITY: Set these via Ansible Vault in production
-authelia_jwt_secret: "change-me-to-a-random-string-32chars"
-authelia_session_secret: "change-me-to-another-random-string"
-authelia_storage_encryption_key: "change-me-to-yet-another-32char-key"
+# authelia_jwt_secret / authelia_session_secret / authelia_storage_encryption_key → set in group_vars/all/vault.yml
 
 # Dockge (Docker Compose stack manager)
 dockge_image: louislam/dockge
